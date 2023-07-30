@@ -141,7 +141,7 @@ def get_one_planet(planet_id):
 def getFavoritesUser(user_id):
     try:
 
-        favorites_query = Favorites.query.filter_by(id=user_id).first()
+        favorites_query = Favorites.query.filter_by(userID=user_id).first()
 
         response_body = {
             "msg": "all favorites for one user",
