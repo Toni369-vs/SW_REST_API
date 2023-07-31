@@ -155,7 +155,7 @@ def getFavoritesUser(user_id):
         raise APIException('favoritos no encontrados', 404)
 
 
-# AÑADIR PLANETA FAVORITO AL USUARIO ACTUAL
+# AÑADIR PLANETA FAVORITO POR ID
 
 @app.route('/favorito/planets/<int:planet_id>', methods=['POST'])
 def add_planets_favorite(planet_id):
@@ -171,27 +171,25 @@ def add_planets_favorite(planet_id):
     if not planet:
         return jsonify({'mensaje': 'El planeta no existe'}), 404
 
-    favorito_existente = Favorites.query.filter_by(userID=user.id, planetID=planet_id).first()
+    favorito_existente = Favorites.query.filter_by(
+        userID=user.id, planetID=planet_id).first()
     if favorito_existente:
         return jsonify({'mensaje': 'El planeta ya está en favoritos'}), 404
-    
-    
 
     new_favorite = Favorites(userID=user.id, planetID=planet_id)
     db.session.add(new_favorite)
     db.session.commit()
 
     response_body = {
-        'msg':'ok',
+        'msg': 'ok',
         "results": new_favorite.serialize()
     }
 
     return jsonify(response_body, {'mensaje': 'Planeta agregado a favoritos exitosamente'}), 200
 
-   
+   # AÑADIR Charater FAVORITO POR ID
 
-   # AÑADIR Charater FAVORITO AL USUARIO ACTUAL
-    
+
 @app.route('/favorito/people/<int:people_id>', methods=['POST'])
 def add_character_favorite(people_id):
 
@@ -206,7 +204,8 @@ def add_character_favorite(people_id):
     if not people:
         return jsonify({'mensaje': 'El personaje no existe'}), 404
 
-    favorito_existente = Favorites.query.filter_by(userID=user.id, characterID=people_id).first()
+    favorito_existente = Favorites.query.filter_by(
+        userID=user.id, characterID=people_id).first()
     if favorito_existente:
         return jsonify({'mensaje': 'El personaje ya está en favoritos'}), 404
 
@@ -215,12 +214,67 @@ def add_character_favorite(people_id):
     db.session.commit()
 
     response_body = {
-        'msg':'ok',
+        'msg': 'ok',
         "results": new_favorite.serialize()
     }
 
+    return jsonify(response_body, {'mensaje': 'Personaje agregado a favoritos exitosamente'}), 200
 
-    return jsonify(response_body,{'mensaje': 'Personaje agregado a favoritos exitosamente'}), 200
+# ELIMINAR Planeta FAVORITO POR ID
+
+
+@app.route('/favorito/planets/<int:planet_id>', methods=['DELETE'])
+def remove_planets_favorite(planet_id):
+    request_body = request.json.get('User')
+    user = User.query.get(request_body)
+
+    if not user:
+        return jsonify({'mensaje': 'Usuario no encontrado'}), 404
+
+    planet = Planets.query.get(planet_id)
+    if not planet:
+        return jsonify({'mensaje': 'El planeta no existe'}), 404
+
+    # Buscar el favorito en la base de datos
+    delete_favorite = Favorites.query.filter_by(
+        userID=user.id, planetID=planet_id).first()
+    db.session.delete(delete_favorite)
+    db.session.commit()
+
+    response_body = {
+            'msg': 'Planeta eliminado de favoritos exitosamente',
+            "results": delete_favorite.serialize()
+        }
+
+    return jsonify(response_body, {'mensaje': 'Planeta eliminado de favoritos exitosamente'}), 200
+
+
+# ELIMINAR Character FAVORITO POR ID
+
+@app.route('/favorito/people/<int:people_id>', methods=['DELETE'])
+def remove_people_favorite(people_id):
+
+    request_body = request.json.get('User')
+
+    user = User.query.get(request_body)
+
+    if not user:
+        return jsonify({'mensaje': 'Usuario no encontrado'}), 404
+
+    people = People.query.get(people_id)
+    if not people:
+        return jsonify({'mensaje': 'El personaje no existe'}), 404
+
+    delete_favorite = Favorites.query.filter_by(userID=user.id, characterID=people_id).first()
+    db.session.delete(delete_favorite)
+    db.session.commit()
+   
+    response_body = {
+        'msg': 'Personaje eliminado de favoritos exitosamente',
+        "results": delete_favorite.serialize()
+    }
+
+    return jsonify(response_body,{'mensaje': 'Personaje eliminado de favoritos exitosamente'}), 200
 
 
 # FIN ENDPOINTS
