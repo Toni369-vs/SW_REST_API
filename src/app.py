@@ -142,10 +142,12 @@ def getFavoritesUser(user_id):
     try:
 
         favorites_query = Favorites.query.filter_by(userID=user_id).first()
+        if not favorites_query:
+            raise APIException('Favoritos no encontrados', 404)
 
         response_body = {
             "msg": "all favorites for one user",
-            "results": favorites_query
+            "results": favorites_query.serialize(),
         }
         return jsonify(response_body), 200
 
@@ -172,12 +174,19 @@ def add_planets_favorite(planet_id):
     favorito_existente = Favorites.query.filter_by(userID=user.id, planetID=planet_id).first()
     if favorito_existente:
         return jsonify({'mensaje': 'El planeta ya está en favoritos'}), 404
+    
+    
 
     new_favorite = Favorites(userID=user.id, planetID=planet_id)
     db.session.add(new_favorite)
     db.session.commit()
 
-    return jsonify({'mensaje': 'Planeta agregado a favoritos exitosamente'}), 200
+    response_body = {
+        'msg':'ok',
+        "results": new_favorite.serialize()
+    }
+
+    return jsonify(response_body, {'mensaje': 'Planeta agregado a favoritos exitosamente'}), 200
 
    
 
@@ -205,7 +214,13 @@ def add_character_favorite(people_id):
     db.session.add(new_favorite)
     db.session.commit()
 
-    return jsonify({'mensaje': 'Personaje agregado a favoritos exitosamente'}), 200
+    response_body = {
+        'msg':'ok',
+        "results": new_favorite.serialize()
+    }
+
+
+    return jsonify(response_body,{'mensaje': 'Personaje agregado a favoritos exitosamente'}), 200
 
 
 # FIN ENDPOINTS
