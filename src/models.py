@@ -11,7 +11,7 @@ class User(db.Model):
     
 
     def __repr__(self):
-        return '<User %r>' % self.id
+        return f"{self.id}"
 
     def serialize(self):
         return {
@@ -27,7 +27,8 @@ class Favorites(db.Model):
     planetID = db.Column(db.Integer, db.ForeignKey("planets.planetID"))
     characterID = db.Column(db.Integer, db.ForeignKey("people.characterID"))
    
-    
+    def __repr__(self):
+        return f"{self.userID},{self.characterID},{self.planetID}"
 
     def serialize(self):
         return {
@@ -55,7 +56,8 @@ class People(db.Model):
     favorites_people = db.relationship("Favorites", backref="people")
 
     def __repr__(self):
-        return '<People %r>' % self.characterID
+        return f"{self.characterID}"
+
 
 
     def serialize(self):
@@ -83,7 +85,7 @@ class Planets(db.Model):
     favorites_planets = db.relationship("Favorites", backref="planets")
 
     def __repr__(self):
-        return '<Planets %r>' % self.planetID
+        return f"{self.planetID}"
     
     def serialize(self):
         return {

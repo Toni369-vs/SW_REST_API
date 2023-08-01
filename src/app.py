@@ -51,6 +51,7 @@ def get_all_users():
     try:
         users_query = User.query.all()
         results = list(map(lambda item: item.serialize(), users_query))
+        print(results)
 
         response_body = {
             "msg": "all users",
@@ -87,7 +88,7 @@ def getPeople():
 def get_one_people(people_id):
     try:
         people_query = People.query.filter_by(characterID=people_id).first()
-
+        
         response_body = {
             "msg": "OK",
             "result": people_query.serialize(),
@@ -196,11 +197,13 @@ def add_character_favorite(people_id):
     request_body = request.json.get('User')
 
     user = User.query.get(request_body)
+    print(user)
 
     if not user:
         return jsonify({'mensaje': 'Usuario no encontrado'}), 404
 
     people = People.query.get(people_id)
+    print(people)
     if not people:
         return jsonify({'mensaje': 'El personaje no existe'}), 404
 
@@ -208,14 +211,14 @@ def add_character_favorite(people_id):
         userID=user.id, characterID=people_id).first()
     if favorito_existente:
         return jsonify({'mensaje': 'El personaje ya está en favoritos'}), 404
-
-    new_favorite = Favorites(userID=user.id, characterID=people_id)
+    
+    new_favorite = Favorites(characterID= people_id, userID=user.id)
     db.session.add(new_favorite)
     db.session.commit()
 
     response_body = {
         'msg': 'ok',
-        "results": new_favorite.serialize()
+        "results": new_favorite.serialize(),
     }
 
     return jsonify(response_body, {'mensaje': 'Personaje agregado a favoritos exitosamente'}), 200
