@@ -10,6 +10,10 @@ from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User, People, Planets, Favorites
 # from models import Person
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -28,7 +32,9 @@ CORS(app)
 setup_admin(app)
 
 # Handle/serialize errors like a JSON object
-
+# Setup the Flask-JWT-Extended extension
+app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+jwt = JWTManager(app)
 
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
@@ -279,6 +285,67 @@ def remove_people_favorite(people_id):
 
     return jsonify(response_body,{'mensaje': 'Personaje eliminado de favoritos exitosamente'}), 200
 
+
+# ENDPOINTS PARA CREACIÓN DE USUARIO
+
+@app.route('/users', methods=['POST'])
+def create_user():
+
+        request_body = request.get_json(force=True)
+        if 'email' not in request_body or 'password' not in request_body or 'is_active' not in request_body:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        existing_user = User.query.filter_by(email=request_body['email']).first()
+        if existing_user:
+            return jsonify({"error": "User with this email already exists"}), 409        
+
+        user = User(email=request_body['email'],
+                password=request_body['password'],
+                is_active=request_body['is_active'])
+    
+        db.session.add(user)
+        db.session.commit()
+
+
+        response_body = {
+       "results": 'User Created',
+       "user": user.serialize()
+        }
+
+        return jsonify(response_body), 200
+
+# ENDPOINT PARA LOGIN
+
+@app.route("/login", methods=["POST"])
+def login():
+
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+
+    if email != "email":
+        return jsonify({"msg": "Bad email"}), 401
+
+    if  password != "password":
+        return jsonify({"msg": "Bad password"}), 401
+
+    access_token = create_access_token(identity=email)
+    return jsonify(access_token=access_token),200
+
+# ENDPOINT DE VALIDACIÓN
+
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(email=current_user).first()
+
+    response_body = {
+        "logged_in_as": current_user,
+        "user": user.serialize()
+        }
+    
+    return jsonify(logged_in_as=current_user), 200
 
 # FIN ENDPOINTS
 
